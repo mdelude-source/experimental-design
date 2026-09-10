@@ -1,0 +1,188 @@
+---
+title: "TPSS603_HW02_papaya_exploration"
+output: pdf_document
+---
+
+# TPSS 603 - Experimental Design
+### Name:
+
+```{r setup, include=FALSE}
+
+#libraries needed for the homework
+library(tidyr)       # pivot_longer / pivot_wider (wide <-> long reshaping)
+library(tidyverse)   # meta-package: loads ggplot2, readr, purrr, stringr, etc.
+library(ggplot2)     # grammar-of-graphics plotting
+library(ggpubr)      # publication-ready wrappers: ggboxplot, ggarrange, geom_pwc
+library(psych)       # describe() - extended descriptive stats
+library(gmodels)     # CrossTable(), ci() for confidence intervals
+library(rstatix)     # tidy-friendly stats: wilcox_test, kruskal_test, etc.
+library(plotrix)     # std.error() - standard error of the mean
+library(raster)      # cv() - coefficient of variation
+
+```
+
+---
+
+## Part 1: Data Exploration, Summarization & Visualization
+
+This homework uses the `papaya_germplasm_collection.csv` dataset, which
+contains fruit morphology, color, and quality traits scored across a
+papaya germplasm collection. Make sure the data file is in your working
+directory (or provide the full file path) before knitting.
+
+### Question 1
+**Read in the papaya germplasm data and confirm it loaded correctly (dimensions, column names, and structure).**
+
+```{r}
+
+#read in the datafile
+Phen <- read.csv("")
+
+#confirm the data loaded correctly
+dim(Phen)
+names(Phen)
+str(Phen)
+
+```
+
+### Question 2
+**How many accessions (rows) and how many traits (columns) are in this dataset?**
+
+**Answer:**
+
+### Question 3
+**Which columns are numeric (continuous) traits and which are categorical traits? List at least three of each.**
+
+**Answer:**
+
+### Question 4
+**Create a scatterplot of FRUIT.LENGTH vs. FRUIT.WEIGHT, colored by SEED.COLOR, with a smoothed trend line.**
+
+```{r, fig.width=8, fig.height=5}
+
+#build the scatterplot with a smoothed trend line
+
+
+
+```
+
+### Question 5
+**Describe the relationship between fruit length and fruit weight shown in the plot above. Does it differ by seed color?**
+
+**Answer:**
+
+### Question 6
+**Calculate overall summary statistics (min, max, mean, median, sd, se, and cv) for all numeric traits in the dataset.**
+
+```{r}
+
+#hint: summarise_if(is.numeric, ...) applies each function only to numeric columns
+sum_overall <- Phen %>%
+  summarise_if(is.numeric,
+               list(min    = min,
+                    max    = max,
+                    mean   = mean,
+                    median = median,
+                    sd     = sd,
+                    se     = std.error,
+                    cv     = cv))
+
+sum_overall
+
+```
+
+### Question 7
+**Calculate the same summary statistics, but this time grouped by FRUIT.FLESH.COLOR.**
+
+```{r}
+
+
+
+```
+
+### Question 8
+**Which FRUIT.FLESH.COLOR group has the highest mean FRUIT.DIAMETER? Which group is the most variable (highest cv)?**
+
+**Answer:**
+
+### Question 9
+**Build a bar chart of mean FRUIT.DIAMETER by FRUIT.FLESH.COLOR, with error bars showing +/- one standard error.**
+
+```{r, fig.width=8, fig.height=5}
+
+#hint: first build a small summary table with group means and std.error,
+#then plot it with geom_bar() and geom_errorbar()
+
+
+
+```
+
+### Question 10
+**Test whether FRUIT.DIAMETER differs significantly between levels of VISUAL.SKIN.COLOR. Produce a boxplot with pairwise comparisons (e.g., Wilcoxon test with a Bonferroni correction) annotated on the plot.**
+
+```{r, fig.width=8, fig.height=6}
+
+#hint: inspect the grouping variable first with str() / unique(),
+#then use ggboxplot() + geom_pwc() from the ggpubr package
+
+
+
+```
+
+### Question 11
+**Which pairwise comparisons (if any) are statistically significant? What does this tell you biologically about VISUAL.SKIN.COLOR and fruit diameter?**
+
+**Answer:**
+
+
+
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** The papaya germplasm collection you just analyzed includes
+accessions gathered over several decades from small-scale growers on
+multiple islands, many of whom had maintained and selected their own
+papaya lines informally for generations. The growers allowed researchers
+to collect cuttings and seed for the germplasm repository with the
+understanding that the material would be used to "help preserve papaya
+diversity for the future."
+
+Years later, several accessions in the collection are found to carry a
+rare combination of fruit quality traits (small seed cavity, high total
+soluble solids) that make them attractive for commercial breeding. A
+private breeding company licenses several of these accessions from the
+genebank to develop a new commercial variety. The company is not required
+to disclose which original accessions were used, the original growers are
+not identified or compensated, and the genebank's public passport data
+does not distinguish which traits came from which specific farm or
+collector.
+
+Consider this scenario as you answer the following questions.
+
+### Question 12
+**What is the ethical tension or dilemma?**
+
+**Answer:**
+
+### Question 13
+**Who holds power in this situation?**
+
+**Answer:**
+
+### Question 14
+**Whose voices are missing or marginalized?**
+
+**Answer:**
+
+### Question 15
+**What harm could occur -- even unintentionally -- and what genebank or policy practices might help prevent it?**
+
+**Answer:**
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
