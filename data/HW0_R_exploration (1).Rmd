@@ -4,7 +4,7 @@ output: pdf_document
 ---
 
 # TPSS 603 - Experimental Design
-### Name:
+### Name: Manō'ike Delude
 
 ```{r setup, include=FALSE}
 
@@ -120,10 +120,6 @@ sum_flesh
 
 **Answer:** __Orange/Yellow flesh have the highest mean fruit diameter. Orange fuit has the highest cv, but pink/orange and yellow/orange have NA for their cv calculations, like because there's not enough data for std calculations__
 ```{r}
-##arranged_sum_flesh <- sum_flesh %>%
-##relocate(FRUIT.DIAMETER_mean, .after = FRUIT.FLESH.COLOR) %>%
-##arrange(FRUIT.DIAMETER_mean)
-##arranged_sum_flesh
 
 arranged_sum_flesh <- sum_flesh %>%
 relocate(FRUIT.DIAMETER_cv, .after = FRUIT.FLESH.COLOR) %>%
