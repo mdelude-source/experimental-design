@@ -36,7 +36,7 @@ directory (or provide the full file path) before knitting.
 ```{r}
 
 #read in the datafile
-Phen <- read.csv("")
+Phen <- read.csv("C:/Users/cesiu/Desktop/OCN682 R/Experimental Design/experimental-design/data/papaya_germplasm_collection.csv")
 
 #confirm the data loaded correctly
 dim(Phen)
@@ -48,12 +48,13 @@ str(Phen)
 ### Question 2
 **How many accessions (rows) and how many traits (columns) are in this dataset?**
 
-**Answer:**
+**Answer:** __70 rows, 28 cols__
 
 ### Question 3
 **Which columns are numeric (continuous) traits and which are categorical traits? List at least three of each.**
 
-**Answer:**
+**Answer:** __Numeric: FRUIT.DIAMETER, FRUIT.LENGTH, FRUIT.WEIGHT__
+__Categorical: BLOSSOM.END.DEFECT, FRUIT.FLESH.COLOR, FRUIT.SHAPE__
 
 ### Question 4
 **Create a scatterplot of FRUIT.LENGTH vs. FRUIT.WEIGHT, colored by SEED.COLOR, with a smoothed trend line.**
@@ -61,7 +62,9 @@ str(Phen)
 ```{r, fig.width=8, fig.height=5}
 
 #build the scatterplot with a smoothed trend line
-
+ggplot(Phen) +
+  geom_point(mapping = aes(x = FRUIT.LENGTH, y = FRUIT.WEIGHT, color = SEED.COLOR)) +
+  geom_smooth(method = "lm", se =FALSE, aes(x = FRUIT.LENGTH, y = FRUIT.WEIGHT))
 
 
 ```
@@ -69,7 +72,7 @@ str(Phen)
 ### Question 5
 **Describe the relationship between fruit length and fruit weight shown in the plot above. Does it differ by seed color?**
 
-**Answer:**
+**Answer:** __Longer Papayas tend to weigh more, brown seeds tend to grow shorter, smaller fruit, while black seeds have a more even spread.__
 
 ### Question 6
 **Calculate overall summary statistics (min, max, mean, median, sd, se, and cv) for all numeric traits in the dataset.**
@@ -88,14 +91,26 @@ sum_overall <- Phen %>%
                     cv     = cv))
 
 sum_overall
-
 ```
 
 ### Question 7
 **Calculate the same summary statistics, but this time grouped by FRUIT.FLESH.COLOR.**
 
 ```{r}
-
+sum_flesh <- Phen %>%
+## unsure if we should consider NAs or not
+##  filter(!is.na(FRUIT.FLESH.COLOR)) %>%
+  group_by(FRUIT.FLESH.COLOR) %>%
+  summarise_if(is.numeric,
+               list(min    = min,
+                    max    = max,
+                    mean   = mean,
+                    median = median,
+                    sd     = sd,
+                    se     = std.error,
+                    cv     = cv))
+  
+sum_flesh
 
 
 ```
@@ -103,8 +118,20 @@ sum_overall
 ### Question 8
 **Which FRUIT.FLESH.COLOR group has the highest mean FRUIT.DIAMETER? Which group is the most variable (highest cv)?**
 
-**Answer:**
+**Answer:** __Orange/Yellow flesh have the highest mean fruit diameter. Orange fuit has the highest cv, but pink/orange and yellow/orange have NA for their cv calculations, like because there's not enough data for std calculations__
+```{r}
+##arranged_sum_flesh <- sum_flesh %>%
+##relocate(FRUIT.DIAMETER_mean, .after = FRUIT.FLESH.COLOR) %>%
+##arrange(FRUIT.DIAMETER_mean)
+##arranged_sum_flesh
 
+arranged_sum_flesh <- sum_flesh %>%
+relocate(FRUIT.DIAMETER_cv, .after = FRUIT.FLESH.COLOR) %>%
+
+arrange(FRUIT.DIAMETER_cv)
+
+arranged_sum_flesh
+```
 ### Question 9
 **Build a bar chart of mean FRUIT.DIAMETER by FRUIT.FLESH.COLOR, with error bars showing +/- one standard error.**
 
@@ -113,8 +140,16 @@ sum_overall
 #hint: first build a small summary table with group means and std.error,
 #then plot it with geom_bar() and geom_errorbar()
 
+dia_by_color <- Phen %>%
+  filter(!is.na(FRUIT.FLESH.COLOR)) %>%
+  filter(!is.na(FRUIT.DIAMETER)) %>%
+  group_by(FRUIT.FLESH.COLOR) %>%
+  summarize(mean_diameter = mean(FRUIT.DIAMETER), se = std.error(FRUIT.DIAMETER))
 
-
+ggplot(dia_by_color, aes(x = FRUIT.FLESH.COLOR, y = mean_diameter)) +
+  ##geom_bar() doesn't work since we pre-calculated the mean and sd values
+  geom_col() +
+  geom_errorbar( aes(ymin = mean_diameter-se, ymax = mean_diameter+se))
 ```
 
 ### Question 10
@@ -125,6 +160,14 @@ sum_overall
 #hint: inspect the grouping variable first with str() / unique(),
 #then use ggboxplot() + geom_pwc() from the ggpubr package
 
+dia_by_skin_color <- Phen %>%
+   filter(!is.na(FRUIT.DIAMETER)) %>%
+   filter(!is.na(VISUAL.SKIN.COLOR))
+
+
+ggplot(dia_by_skin_color, aes(x = VISUAL.SKIN.COLOR, y = FRUIT.DIAMETER)) +
+  geom_boxplot(fill = NA) +
+  geom_pwc(method = "wilcox_test", p.adjust.method = "bonferroni")
 
 
 ```
@@ -132,8 +175,7 @@ sum_overall
 ### Question 11
 **Which pairwise comparisons (if any) are statistically significant? What does this tell you biologically about VISUAL.SKIN.COLOR and fruit diameter?**
 
-**Answer:**
-
+**Answer:** __Green/Yellow to Yellow/Orange is the most siginificant comparison. The others are: Orange to Yellow/Orange, Orange to Yellow, Green/Yellow to Orange (everything less than 0.05). This tells us that an orange skinned papaya is statistically significantly smaller that other varieties, and that Green/Yellows are much more likely to be slightly wider than Yellow/Oranges.
 
 
 
@@ -164,22 +206,24 @@ Consider this scenario as you answer the following questions.
 ### Question 12
 **What is the ethical tension or dilemma?**
 
-**Answer:**
+**Answer:** __It's unjust to not credit the original growers and use generational knowledge for commercial gain, both from the fruit company and the researchers' licencing fees.__
 
 ### Question 13
 **Who holds power in this situation?**
 
-**Answer:**
+**Answer:** __The researchers taking care of the genebank.__
 
 ### Question 14
 **Whose voices are missing or marginalized?**
 
-**Answer:**
+**Answer:** __Local small growers and their families.__
 
 ### Question 15
 **What harm could occur -- even unintentionally -- and what genebank or policy practices might help prevent it?**
 
-**Answer:**
+**Answer:** __Direct fiscal harm comes to the farmers who have to compete with a private company that didn't have to spend capital to breed their own lines, on top of opporunistic loss from their lack of credit. There's also a long-term cultural harm where locals will be less willing to share materials with researchers in the future.__
+
+__Unaccredited accessions should be rectified with proper documentation, and the licensing should include royalties to the families who contributed. If it's impossible to retroactively document who supplied which lines then it should be split among all the contributing families.__
 
 ---
 
