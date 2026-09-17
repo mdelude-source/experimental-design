@@ -1,0 +1,154 @@
+---
+title: "TPSS603_HW01_template"
+output: pdf_document
+---
+
+# TPSS 603 - Experimental Design
+### Name: Manōʻike Delude
+
+```{r setup, include=FALSE}
+
+#libraries needed for the homework
+library(gmodels)
+library(dplyr)
+library(raster)
+library(agricolae)
+library(ggplot2)
+
+```
+
+---
+
+## Part 1: Completely Randomized (CR) Design
+
+### Question 1
+**Create a potential randomization for a CR experiment that has 3 treatments and 5 replications per treatment.**
+
+```{r}
+
+#create a randomization for a CR design
+design.crd() #function from agricolae that will do the randomization
+
+```
+
+### Question 2
+**What is the Null Hypothesis?**
+
+**Answer:**
+
+### Question 3
+**What is the Alternative Hypothesis?**
+
+**Answer:**
+
+### Question 4
+**What is the Linear Additive Model?**
+*(this is the abstraction of the generalized model)*
+
+**Answer:**
+
+```{r}
+#this is where you use the data from the file attached
+data <- read.csv("") #read in the datafile
+head(data) #look at the first 6 lines of the data
+
+#create the anova model for the design using the data provided
+mod <- aov("CR design model", data=data) #create a linear model for the data
+
+```
+
+### Question 5
+**What are the treatments?**
+
+**Answer:**
+
+### Question 6
+**How many factors are being studied?**
+
+**Answer:**
+
+### Question 7
+**Produce the ANOVA table for the experiment.**
+
+```{r}
+
+summary() #Print the summary of the anova table from the model above
+
+```
+
+### Question 8
+**Is the normality of residuals assumption true (qqplot)?**
+
+**Answer:**
+
+```{r}
+
+par(mfrow=c(2,2)) #set the plot
+plot(mod) #use the plot function to make the qq plot
+
+```
+
+### Question 9
+**Do we reject or fail to reject the null hypothesis?**
+
+**Answer:**
+
+### Question 10
+**Construct a contrast between two treatments and interpret the result.**
+
+```{r}
+
+mod # look at linear model
+summary(mod) # look at the summary of the model
+fit.contrast(mod,"Trt", c()) # create the contrast between two treatments
+
+```
+
+**Answer:**
+
+### Question 11
+**Construct all pairwise comparisons using an HSD or LSD, create a plot, and interpret the results.**
+
+```{r}
+
+
+
+```
+
+**Answer:**
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** The fertilizer trial you just analyzed (Fert1, Fert2, Fert3 vs. plant height) was conducted on a small family-run farm that agreed to host the experiment on their land. The farm has used its own traditional, informally-developed fertilizer blend for generations and agreed to let a university team test it against two commercial fertilizers, expecting the results would help them decide what to use going forward.
+
+After the trial, the university researchers find that the commercial fertilizer significantly outperforms the farm's traditional blend. The results are written up for publication and shared with an agricultural input company that helped fund the study, with the goal of marketing the winning fertilizer more broadly. The farm family is not listed as a co-author, is not consulted on how the results are described, and does not know the data will be shared with the company. The publication does not mention that the "traditional blend" recipe itself — knowledge developed and refined by the family over decades — is now effectively public and attributable to no one.
+
+Consider this scenario as you answer the following questions.
+
+### Question 12
+**What is the ethical tension or dilemma?**
+
+**Answer:**
+
+### Question 13
+**Who holds power in this situation?**
+
+**Answer:**
+
+### Question 14
+**Whose voices are missing or marginalized?**
+
+**Answer:**
+
+### Question 15
+**What harm could occur — even unintentionally?**
+
+**Answer:**
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
