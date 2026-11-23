@@ -1,0 +1,174 @@
+---
+title: "HW_Nonparametric"
+author: "Mano'ike Delude"
+date: "11/13/2026"
+output:
+  html_document:
+    df_print: paged
+---
+
+# TPSS 603 - Experimental Design
+## Nonparametric Methods
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+library(car)
+library(dplyr)
+library(ggplot2)
+library(MuMIn)
+library(agricolae)
+library(multcomp)
+library(FSA)
+library(boot)
+library(bootstrap)
+library(rcompanion)
+library(PMCMR)
+library(PMCMRplus)
+library(here)
+
+```
+
+---
+
+## Part 1: Nonparametric Analysis
+
+**Scenario:** The first dataset shows the difference in the number of glucocorticoid receptors for different cell types (`class`). The second dataset explores a nonparametric factorial design examining the effect of a growth supplement and diet on cattle weight gain.
+
+```{r}
+receptors_dat <- read.csv(here("Homework_08","data","HW8_Kruskal_wallace_vs_anova.csv"),header=TRUE)
+str(receptors_dat)
+```
+
+### Question 1
+**Do a Kruskal-Wallis test of the hypotheses on the attached data. Describe the result of the test in terms of "statistical significance" and create a visual for the results.**
+
+```{r}
+receptors_out <- kruskal.test(receptors~class,data=receptors_dat)
+print(receptors_out)
+
+ggplot(data=receptors_dat, aes(fill = class)) +
+  geom_boxplot(aes(x=class,y=receptors))
+
+# Dunn's test for pairwise comparisons
+dunn_test <- dunnTest(receptors ~ class, data = receptors_dat, method = "bh")
+print(dunn_test)
+
+p_dunn <- dunn_test$res
+
+cldList(P.adj ~ Comparison, data = p_dunn, threshold = 0.05)
+```
+
+**Answer:** Kruskal-Wallis: Some comparisons are significant, therefore we can reject H0 (H0 = no significant differences among classes).\
+Dunn: There are different groupings between some Cell Types therefore we can reject the null (H0)
+
+
+### Question 2
+**Do a conventional ANOVA on the same data, considering it a CR design.**
+
+```{r}
+receptor_cr <- lm(receptors~class,data=receptors_dat)
+aov_receptor <- aov(receptors~class,data=receptors_dat)
+
+anova(receptor_cr)
+print(aov_receptor)
+
+par(mfrow=c(2,2))
+plot(receptor_cr)
+
+hsd_receptor <- TukeyHSD(aov_receptor, conf.level = 0.95)
+print(hsd_receptor)
+```
+
+### Question 3
+**Compare and contrast the results.**
+
+**Answer:** QQ residuals are highly tailed, and observation 37 hits a Cook's distance line. While the ANOVA says there's significant differences, the residuals violate normality assumptions. TukeyHSD of ANOVA shows that there are significant pairwise differences between CLL-AL and normal-AL receptors only, while the nonparametric analysis suggests there are more significant pairwise differences than those two pairs.
+
+### Question 4
+**Conduct the non-parametric factorial analysis on the cattle growth data.**
+
+```{r}
+
+facdat<-read.csv(here("Homework_08","data","HW8_cow_growth.csv"))
+str(facdat)
+
+scheirer_ray_hare_result <- scheirerRayHare(gain~supplement+diet , data = facdat)
+print(scheirer_ray_hare_result)
+
+# Perform Dunn's test for pairwise comparisons
+dunn_results <- dunnTest(gain~supplement , data = facdat, method = "bh")
+print(dunn_results)
+dunn_results2 <- dunnTest(gain~diet , data = facdat, method = "bh")
+print(dunn_results2)
+```
+
+### Question 5
+**Interpret the result.**
+
+**Answer:** There is significant difference between Agrimore and Supergain, but it seems the food type affects weight gain more than the additives.
+
+---
+
+## Part 2: Data Ethics
+
+### Scenario A: The Receptor Analysis
+
+**Scenario:** The glucocorticoid receptor dataset comes from patient-derived leukemia cell samples across several diagnostic categories (e.g., acute leukemia, chronic lymphocytic leukemia, chronic myeloid leukemia, hairy cell leukemia) alongside normal cells. Glucocorticoid receptor counts help predict how well a patient's leukemia will respond to steroid-based chemotherapy, so this comparison has direct implications for real treatment decisions.
+
+Because the sample sizes per cell type are small and the data are skewed, it's possible for the Kruskal-Wallis test and the conventional ANOVA to disagree about whether there is a statistically significant difference between cell types. Your supervisor, who is preparing a manuscript with a treatment-response recommendation already in mind, tells you that if the two tests disagree, you should report only whichever one supports the recommendation he wants to make, and leave the other analysis out of the paper entirely — without disclosing to reviewers or readers that a second test was ever run.
+
+Consider this scenario as you answer the following questions.
+
+### Question 6
+**What is the ethical tension or dilemma?**
+
+**Answer:** Presenting misleading results by omitting contradicting statistics.
+
+### Question 7
+**Who holds power in this situation?**
+
+**Answer:** The supervisor has power over the researcher
+
+### Question 8
+**Whose voices are missing or marginalized?**
+
+**Answer:** Patients, doctors. 
+
+### Question 9
+**What harm could occur — even unintentionally?**
+
+**Answer:** Patients will get incorrect treatment, doctors will have damaged reputations by providing faulty treatments, and the greater societal trust in medicine will erode.
+
+### Scenario B: The Cattle Supplement Analysis
+
+**Scenario:** The cattle growth dataset was collected as part of a trial funded by the company that makes "supersupp," one of the four supplements tested (alongside "supergain," "agrimore," and an unsupplemented control) across three diet types. It's possible for a supplement-by-diet interaction like this to mean a product's advantage only shows up under some feed types and not others.
+
+Regardless of what your diet-by-supplement breakdown actually shows, the company wants your report to lead with the headline "supersupp significantly increases weight gain" and to present only the pooled result across all three diets, omitting the interaction breakdown entirely. Many of the small-scale cattle producers who would read this report and decide whether to buy the supplement raise their cattle on a variety of feed types, not all of them the same as what was tested here.
+
+Consider this scenario as you answer the following questions.
+
+### Question 10
+**What is the ethical tension or dilemma?**
+
+**Answer:** Incorrectly combining data to intentionally mislead
+
+### Question 11
+**Who holds power in this situation?**
+
+**Answer:** The company that funded the trial
+
+### Question 12
+**Whose voices are missing or marginalized?**
+
+**Answer:** The researcher and farmers
+
+### Question 13
+**What harm could occur — even unintentionally?**
+
+**Answer:** Farmers will be financially harmed by spending on a product that doesn't work for their system, and the researcher's credibility will be reduced.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

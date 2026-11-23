@@ -1,0 +1,153 @@
+---
+title: "HW3_Factorial"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# TPSS 603 - Experimental Design
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+
+library(car)
+library(agricolae)
+library(multcompView)
+library(ggplot2)
+library(multcomp)
+library(here)
+
+```
+
+---
+
+## Part 1: Factorial Design Analysis
+
+**Scenario:** This is a factorial experiment; it looks at all possible combinations of the factors being explored. In this experiment the combination of treatments is fertilizer and light on plant growth (height in cm). There are four fertilizer treatments and two light treatments with 5 replications of each combination.
+
+```{r}
+green <- read.csv(here("Homework_03","data","HW3_2factor_factorial.csv"),header=TRUE)
+head(green)
+str(green)
+summary(green)
+
+```
+
+### Question 1
+**What is the linear model for this experiment?**
+*(recall this is the abstraction of the experimental design, not this specific experiment)*
+
+**Answer:** y~ijk~ = u + a~i~ + B~j~ + aB~ij~ + e~ijk~
+Where y = response (height)
+u = grand mean
+a = fertility
+B = light
+aB = the interaction of fertility and height
+e = standard error
+
+### Question 2
+**Conduct an Analysis of Variance (ANOVA).**
+
+```{r}
+green_aov <- aov(height~fertility*light, data=green)
+summary(green_aov)
+
+```
+
+### Question 3
+**Does your model meet the assumptions of ANOVA? If not, conduct the necessary transformation and repeat the ANOVA on the new data.**
+
+*Checking the assumption of Equal Variance*
+```{r}
+leveneTest(height~fertility*light, data=green, center = mean)
+leveneTest(height~fertility*light, data=green, center = median)
+
+shapiro.test(green_aov$residuals)
+
+boxcox(green_aov, lambda = seq(-2, 2, .1))
+
+bc <- boxcox(green_aov)
+lambda <- bc$x[which.max(bc$y)]
+
+theight <- (green$height)^lambda
+tgreen_aov <- aov(theight~fertility*light, data=green)
+summary(tgreen_aov)
+shapiro.test(tgreen_aov$residuals)
+
+
+```
+
+**Answer:** ps are very high for both laverne and shapiro tests, implying they'll require transformation. But the Box-cox confidence interval includes lambda 1 so a transformation isn't statistically necessary, but to practice I did one based on the boxcox's highest y (which is the lambda x value) anyway.
+
+
+*Conducting further look into normality with QQplot*
+```{r}
+par(mfrow=c(2,2))
+plot(green_aov)
+
+par(mfrow=c(2,2))
+plot(tgreen_aov)
+```
+
+**Answer:** while the rest look relatively fine, the qq plot has a slightly long tails, meaning that we have kurtosis, or that our model fails to account for the extreme ends. Transforming via the box-cox's suggested lambda also didn't seem to affect the qq line much.
+
+### Question 4
+**Write out the ANOVA table.**
+
+```{r}
+summary(green_aov) #has a more significant value for the pair effects than the transformed anova, using this for the tukey etc. tests.
+summary(tgreen_aov)
+
+```
+
+### Question 5
+**Write a brief summary of the results and discuss conclusions you could draw from the analysis of the data set. Include a table or figure of the results of the experiment.**
+
+```{r}
+TukeyHSD(green_aov, which="fertility:light")
+
+green_multicomp <- HSD.test(green_aov, trt = c("fertility","light"), console = TRUE)
+
+
+bar.group(green_multicomp$groups)
+title(cex.main=1,main="Comparison between treatments",ylab="Growth",xlab="Factor Interactions")
+
+```
+
+**Answer:** Light had a more significant impact on plant growth than fertility (all 3 fertility types under high light are statistically the winners). The most interesting thing is how medium fertility had statistically significantly less growth than low or high under low lights. Maybe a stress response helps the lower fertility plant thrive more in low light than a medium one.
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** Your greenhouse trial was partly funded by an agtech startup that sells a home-growing kit pairing their proprietary fertilizer with an LED grow light, marketed to urban gardeners and small-scale indoor growers who don't have access to good outdoor soil or sunlight. Your factorial results show a significant fertilizer-by-light interaction: the company's premium fertilizer only outperforms the cheaper store-brand fertilizer under low light, but under high light (the condition their LED kit actually produces) the two fertilizers perform about the same.
+
+Before you submit your final report, the company's marketing contact asks you to report only the main effect of fertilizer (which shows their product performing better overall) and to leave the interaction effect out of the summary and figure, since "it complicates the story customers are being told." They point out that the interaction term is not the primary hypothesis the funding was granted for.
+
+Consider this scenario as you answer the following questions.
+
+### Question 6
+**What is the ethical tension or dilemma?**
+
+**Answer:** Being pressured to publish misleading results for financial gain.
+
+### Question 7
+**Who holds power in this situation?**
+
+**Answer:** The company that funded the project has the ultimate power to not publish results. The researcher has the power of authorship over the publication.
+
+### Question 8
+**Whose voices are missing or marginalized?**
+
+**Answer:** The researcher's.
+
+### Question 9
+**What harm could occur — even unintentionally?**
+
+**Answer:** Reduced credibility of the researcher harms their future career potential, and the company as a whole could take a reputation hit, which for an agtech startup could mean the death of it and therefore the livelyhood of everyone involved.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

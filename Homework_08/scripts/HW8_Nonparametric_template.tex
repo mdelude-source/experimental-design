@@ -1,0 +1,626 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={HW\_Nonparametric},
+  pdfauthor={Mano'ike Delude},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{HW\_Nonparametric}
+\author{Mano'ike Delude}
+\date{11/13/2026}
+
+\begin{document}
+\maketitle
+
+\section{TPSS 603 - Experimental
+Design}\label{tpss-603---experimental-design}
+
+\subsection{Nonparametric Methods}\label{nonparametric-methods}
+
+\subsubsection{Name: Mano'ike Delude}\label{name-manoike-delude}
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Part 1: Nonparametric
+Analysis}\label{part-1-nonparametric-analysis}
+
+\textbf{Scenario:} The first dataset shows the difference in the number
+of glucocorticoid receptors for different cell types (\texttt{class}).
+The second dataset explores a nonparametric factorial design examining
+the effect of a growth supplement and diet on cattle weight gain.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{receptors\_dat }\OtherTok{\textless{}{-}} \FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"Homework\_08"}\NormalTok{,}\StringTok{"data"}\NormalTok{,}\StringTok{"HW8\_Kruskal\_wallace\_vs\_anova.csv"}\NormalTok{),}\AttributeTok{header=}\ConstantTok{TRUE}\NormalTok{)}
+\FunctionTok{str}\NormalTok{(receptors\_dat)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 'data.frame':    37 obs. of  2 variables:
+##  $ class    : chr  "normal" "normal" "normal" "normal" ...
+##  $ receptors: int  3500 3500 3500 4000 4000 4000 4300 4500 4500 4900 ...
+\end{verbatim}
+
+\subsubsection{Question 1}\label{question-1}
+
+\textbf{Do a Kruskal-Wallis test of the hypotheses on the attached data.
+Describe the result of the test in terms of ``statistical significance''
+and create a visual for the results.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{receptors\_out }\OtherTok{\textless{}{-}} \FunctionTok{kruskal.test}\NormalTok{(receptors}\SpecialCharTok{\textasciitilde{}}\NormalTok{class,}\AttributeTok{data=}\NormalTok{receptors\_dat)}
+\FunctionTok{print}\NormalTok{(receptors\_out)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Kruskal-Wallis rank sum test
+## 
+## data:  receptors by class
+## Kruskal-Wallis chi-squared = 16.668, df = 4, p-value = 0.002242
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(}\AttributeTok{data=}\NormalTok{receptors\_dat, }\FunctionTok{aes}\NormalTok{(}\AttributeTok{fill =}\NormalTok{ class)) }\SpecialCharTok{+}
+  \FunctionTok{geom\_boxplot}\NormalTok{(}\FunctionTok{aes}\NormalTok{(}\AttributeTok{x=}\NormalTok{class,}\AttributeTok{y=}\NormalTok{receptors))}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{HW8_Nonparametric_template_files/figure-latex/unnamed-chunk-2-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Dunn\textquotesingle{}s test for pairwise comparisons}
+\NormalTok{dunn\_test }\OtherTok{\textless{}{-}} \FunctionTok{dunnTest}\NormalTok{(receptors }\SpecialCharTok{\textasciitilde{}}\NormalTok{ class, }\AttributeTok{data =}\NormalTok{ receptors\_dat, }\AttributeTok{method =} \StringTok{"bh"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: class was coerced to a factor.
+\end{verbatim}
+
+\begin{verbatim}
+##   Kruskal-Wallis rank sum test
+## 
+## data: x and g
+## Kruskal-Wallis chi-squared = 16.6682, df = 4, p-value = 0
+## 
+## 
+##                       Dunn's Pairwise Comparison of x by g                      
+##                               (Benjamini-Hochberg)                              
+## 
+## Col Mean-│
+## Row Mean │         AL        CLL        CML   hairycel
+## ─────────┼────────────────────────────────────────────
+##      CLL │   2.892128
+##          │     0.0191*
+##          │
+##      CML │  -0.500059  -2.894125
+##          │     0.7713     0.0380*
+##          │
+## hairycel │  -0.224995  -2.791264   0.265281
+##          │     0.8220     0.0175*    0.8787 
+##          │
+##   normal │   2.270202  -1.138985   2.314824   2.177452
+##          │     0.0464*    0.3639     0.0516*    0.0491*
+## 
+## FDR = 0.05
+## Reject Ho if adjusted p ≤ FDR with stopping rule, where (unadjusted) p = Pr(|Z| ≥ |z|)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(dunn\_test)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Dunn (1964) Kruskal-Wallis multiple comparison
+##   p-values adjusted with the Benjamini-Hochberg method.
+\end{verbatim}
+
+\begin{verbatim}
+##            Comparison          Z     P.unadj      P.adj
+## 1            AL - CLL  2.8921280 0.003826420 0.01913210
+## 2            AL - CML -0.5000593 0.617033292 0.77129162
+## 3           CLL - CML -2.8941258 0.003802157 0.03802157
+## 4      AL - hairycell -0.2249949 0.821983270 0.82198327
+## 5     CLL - hairycell -2.7912643 0.005250259 0.01750086
+## 6     CML - hairycell  0.2652808 0.790793177 0.87865909
+## 7         AL - normal  2.2702028 0.023195284 0.04639057
+## 8        CLL - normal -1.1389851 0.254709382 0.36387055
+## 9        CML - normal  2.3148250 0.020622514 0.05155628
+## 10 hairycell - normal  2.1774522 0.029446842 0.04907807
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{p\_dunn }\OtherTok{\textless{}{-}}\NormalTok{ dunn\_test}\SpecialCharTok{$}\NormalTok{res}
+
+\FunctionTok{cldList}\NormalTok{(P.adj }\SpecialCharTok{\textasciitilde{}}\NormalTok{ Comparison, }\AttributeTok{data =}\NormalTok{ p\_dunn, }\AttributeTok{threshold =} \FloatTok{0.05}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##       Group Letter MonoLetter
+## 1        AL      a        a  
+## 2       CLL      b         b 
+## 3       CML     ac        a c
+## 4 hairycell      a        a  
+## 5    normal     bc         bc
+\end{verbatim}
+
+\textbf{Answer:} Kruskal-Wallis: Some comparisons are significant,
+therefore we can reject H0 (H0 = no significant differences among
+classes).\\
+Dunn: There are different groupings between some Cell Types therefore we
+can reject the null (H0)
+
+\subsubsection{Question 2}\label{question-2}
+
+\textbf{Do a conventional ANOVA on the same data, considering it a CR
+design.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{receptor\_cr }\OtherTok{\textless{}{-}} \FunctionTok{lm}\NormalTok{(receptors}\SpecialCharTok{\textasciitilde{}}\NormalTok{class,}\AttributeTok{data=}\NormalTok{receptors\_dat)}
+\NormalTok{aov\_receptor }\OtherTok{\textless{}{-}} \FunctionTok{aov}\NormalTok{(receptors}\SpecialCharTok{\textasciitilde{}}\NormalTok{class,}\AttributeTok{data=}\NormalTok{receptors\_dat)}
+
+\FunctionTok{anova}\NormalTok{(receptor\_cr)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Analysis of Variance Table
+## 
+## Response: receptors
+##           Df    Sum Sq  Mean Sq F value   Pr(>F)   
+## class      4 353735187 88433797  4.3084 0.006696 **
+## Residuals 32 656834694 20526084                    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(aov\_receptor)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Call:
+##    aov(formula = receptors ~ class, data = receptors_dat)
+## 
+## Terms:
+##                     class Residuals
+## Sum of Squares  353735187 656834694
+## Deg. of Freedom         4        32
+## 
+## Residual standard error: 4530.572
+## Estimated effects may be unbalanced
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{par}\NormalTok{(}\AttributeTok{mfrow=}\FunctionTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{,}\DecValTok{2}\NormalTok{))}
+\FunctionTok{plot}\NormalTok{(receptor\_cr)}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{HW8_Nonparametric_template_files/figure-latex/unnamed-chunk-3-1.pdf}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{hsd\_receptor }\OtherTok{\textless{}{-}} \FunctionTok{TukeyHSD}\NormalTok{(aov\_receptor, }\AttributeTok{conf.level =} \FloatTok{0.95}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(hsd\_receptor)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = receptors ~ class, data = receptors_dat)
+## 
+## $class
+##                       diff        lwr        upr     p adj
+## CLL-AL           -8055.417 -15125.155  -985.6785 0.0191297
+## CML-AL           -2263.750 -10280.080  5752.5796 0.9237833
+## hairycell-AL     -4036.750 -11499.547  3426.0467 0.5309658
+## normal-AL        -7148.036 -12949.829 -1346.2423 0.0097056
+## CML-CLL           5791.667  -2658.287 14241.6200 0.2981981
+## hairycell-CLL     4018.667  -3908.092 11945.4255 0.5918317
+## normal-CLL         907.381  -5480.183  7294.9452 0.9937408
+## hairycell-CML    -1773.000 -10554.449  7008.4491 0.9765995
+## normal-CML       -4884.286 -12305.965  2537.3933 0.3370827
+## normal-hairycell -3111.286  -9931.338  3708.7667 0.6821903
+\end{verbatim}
+
+\subsubsection{Question 3}\label{question-3}
+
+\textbf{Compare and contrast the results.}
+
+\textbf{Answer:} QQ residuals are highly tailed, and observation 37 hits
+a Cook's distance line. While the ANOVA says there's significant
+differences, the residuals violate normality assumptions. TukeyHSD of
+ANOVA shows that there are significant pairwise differences between
+CLL-AL and normal-AL receptors only, while the nonparametric analysis
+suggests there are more significant pairwise differences than those two
+pairs.
+
+\subsubsection{Question 4}\label{question-4}
+
+\textbf{Conduct the non-parametric factorial analysis on the cattle
+growth data.}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{facdat}\OtherTok{\textless{}{-}}\FunctionTok{read.csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"Homework\_08"}\NormalTok{,}\StringTok{"data"}\NormalTok{,}\StringTok{"HW8\_cow\_growth.csv"}\NormalTok{))}
+\FunctionTok{str}\NormalTok{(facdat)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 'data.frame':    48 obs. of  3 variables:
+##  $ supplement: chr  "supergain" "supergain" "supergain" "supergain" ...
+##  $ diet      : chr  "wheat" "wheat" "wheat" "wheat" ...
+##  $ gain      : num  17.4 16.8 18.1 15.8 17.7 ...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{scheirer\_ray\_hare\_result }\OtherTok{\textless{}{-}} \FunctionTok{scheirerRayHare}\NormalTok{(gain}\SpecialCharTok{\textasciitilde{}}\NormalTok{supplement}\SpecialCharTok{+}\NormalTok{diet , }\AttributeTok{data =}\NormalTok{ facdat)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## DV:  gain 
+## Observations:  48 
+## D:  1 
+## MS total:  196
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(scheirer\_ray\_hare\_result)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##                 Df Sum Sq      H p.value
+## supplement       3 1904.3  9.716 0.02114
+## diet             2 6192.9 31.596 0.00000
+## supplement:diet  6   88.8  0.453 0.99836
+## Residuals       36 1026.0
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Perform Dunn\textquotesingle{}s test for pairwise comparisons}
+\NormalTok{dunn\_results }\OtherTok{\textless{}{-}} \FunctionTok{dunnTest}\NormalTok{(gain}\SpecialCharTok{\textasciitilde{}}\NormalTok{supplement , }\AttributeTok{data =}\NormalTok{ facdat, }\AttributeTok{method =} \StringTok{"bh"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: supplement was coerced to a factor.
+\end{verbatim}
+
+\begin{verbatim}
+##   Kruskal-Wallis rank sum test
+## 
+## data: x and g
+## Kruskal-Wallis chi-squared = 9.716, df = 3, p-value = 0.02
+## 
+## 
+##                       Dunn's Pairwise Comparison of x by g                      
+##                               (Benjamini-Hochberg)                              
+## 
+## Col Mean-│
+## Row Mean │   agrimore    control   supergai
+## ─────────┼─────────────────────────────────
+##  control │   2.099562
+##          │     0.0715 
+##          │
+## supergai │   2.770256   0.670694
+##          │     0.0336*    0.6029 
+##          │
+## supersup │   0.670694  -1.428869  -2.099562
+##          │     0.5024     0.2296     0.1073 
+## 
+## FDR = 0.05
+## Reject Ho if adjusted p ≤ FDR with stopping rule, where (unadjusted) p = Pr(|Z| ≥ |z|)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(dunn\_results)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Dunn (1964) Kruskal-Wallis multiple comparison
+##   p-values adjusted with the Benjamini-Hochberg method.
+\end{verbatim}
+
+\begin{verbatim}
+##              Comparison          Z     P.unadj      P.adj
+## 1    agrimore - control  2.0995626 0.035767332 0.07153466
+## 2  agrimore - supergain  2.7702563 0.005601221 0.03360732
+## 3   control - supergain  0.6706936 0.502415728 0.60289887
+## 4  agrimore - supersupp  0.6706936 0.502415728 0.50241573
+## 5   control - supersupp -1.4288690 0.153041884 0.22956283
+## 6 supergain - supersupp -2.0995626 0.035767332 0.10730200
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dunn\_results2 }\OtherTok{\textless{}{-}} \FunctionTok{dunnTest}\NormalTok{(gain}\SpecialCharTok{\textasciitilde{}}\NormalTok{diet , }\AttributeTok{data =}\NormalTok{ facdat, }\AttributeTok{method =} \StringTok{"bh"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: diet was coerced to a factor.
+\end{verbatim}
+
+\begin{verbatim}
+##   Kruskal-Wallis rank sum test
+## 
+## data: x and g
+## Kruskal-Wallis chi-squared = 31.5963, df = 2, p-value = 0
+## 
+## 
+##                       Dunn's Pairwise Comparison of x by g                      
+##                               (Benjamini-Hochberg)                              
+## 
+## Col Mean-│
+## Row Mean │     barley       oats
+## ─────────┼──────────────────────
+##     oats │   2.676904
+##          │     0.0074*
+##          │
+##    wheat │   5.618973   2.942069
+##          │     0.0000*    0.0049*
+## 
+## FDR = 0.05
+## Reject Ho if adjusted p ≤ FDR with stopping rule, where (unadjusted) p = Pr(|Z| ≥ |z|)
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(dunn\_results2)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Dunn (1964) Kruskal-Wallis multiple comparison
+##   p-values adjusted with the Benjamini-Hochberg method.
+\end{verbatim}
+
+\begin{verbatim}
+##       Comparison        Z      P.unadj        P.adj
+## 1  barley - oats 2.676904 7.430587e-03 7.430587e-03
+## 2 barley - wheat 5.618974 1.920953e-08 5.762858e-08
+## 3   oats - wheat 2.942069 3.260270e-03 4.890405e-03
+\end{verbatim}
+
+\subsubsection{Question 5}\label{question-5}
+
+\textbf{Interpret the result.}
+
+\textbf{Answer:} There is significant difference between Agrimore and
+Supergain, but it seems the food type affects weight gain more than the
+additives.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{Part 2: Data Ethics}\label{part-2-data-ethics}
+
+\subsubsection{Scenario A: The Receptor
+Analysis}\label{scenario-a-the-receptor-analysis}
+
+\textbf{Scenario:} The glucocorticoid receptor dataset comes from
+patient-derived leukemia cell samples across several diagnostic
+categories (e.g., acute leukemia, chronic lymphocytic leukemia, chronic
+myeloid leukemia, hairy cell leukemia) alongside normal cells.
+Glucocorticoid receptor counts help predict how well a patient's
+leukemia will respond to steroid-based chemotherapy, so this comparison
+has direct implications for real treatment decisions.
+
+Because the sample sizes per cell type are small and the data are
+skewed, it's possible for the Kruskal-Wallis test and the conventional
+ANOVA to disagree about whether there is a statistically significant
+difference between cell types. Your supervisor, who is preparing a
+manuscript with a treatment-response recommendation already in mind,
+tells you that if the two tests disagree, you should report only
+whichever one supports the recommendation he wants to make, and leave
+the other analysis out of the paper entirely --- without disclosing to
+reviewers or readers that a second test was ever run.
+
+Consider this scenario as you answer the following questions.
+
+\subsubsection{Question 6}\label{question-6}
+
+\textbf{What is the ethical tension or dilemma?}
+
+\textbf{Answer:} Presenting misleading results by omitting contradicting
+statistics.
+
+\subsubsection{Question 7}\label{question-7}
+
+\textbf{Who holds power in this situation?}
+
+\textbf{Answer:} The supervisor has power over the researcher
+
+\subsubsection{Question 8}\label{question-8}
+
+\textbf{Whose voices are missing or marginalized?}
+
+\textbf{Answer:} Patients, doctors.
+
+\subsubsection{Question 9}\label{question-9}
+
+\textbf{What harm could occur --- even unintentionally?}
+
+\textbf{Answer:} Patients will get incorrect treatment, doctors will
+have damaged reputations by providing faulty treatments, and the greater
+societal trust in medicine will erode.
+
+\subsubsection{Scenario B: The Cattle Supplement
+Analysis}\label{scenario-b-the-cattle-supplement-analysis}
+
+\textbf{Scenario:} The cattle growth dataset was collected as part of a
+trial funded by the company that makes ``supersupp,'' one of the four
+supplements tested (alongside ``supergain,'' ``agrimore,'' and an
+unsupplemented control) across three diet types. It's possible for a
+supplement-by-diet interaction like this to mean a product's advantage
+only shows up under some feed types and not others.
+
+Regardless of what your diet-by-supplement breakdown actually shows, the
+company wants your report to lead with the headline ``supersupp
+significantly increases weight gain'' and to present only the pooled
+result across all three diets, omitting the interaction breakdown
+entirely. Many of the small-scale cattle producers who would read this
+report and decide whether to buy the supplement raise their cattle on a
+variety of feed types, not all of them the same as what was tested here.
+
+Consider this scenario as you answer the following questions.
+
+\subsubsection{Question 10}\label{question-10}
+
+\textbf{What is the ethical tension or dilemma?}
+
+\textbf{Answer:} Incorrectly combining data to intentionally mislead
+
+\subsubsection{Question 11}\label{question-11}
+
+\textbf{Who holds power in this situation?}
+
+\textbf{Answer:} The company that funded the trial
+
+\subsubsection{Question 12}\label{question-12}
+
+\textbf{Whose voices are missing or marginalized?}
+
+\textbf{Answer:} The researcher and farmers
+
+\subsubsection{Question 13}\label{question-13}
+
+\textbf{What harm could occur --- even unintentionally?}
+
+\textbf{Answer:} Farmers will be financially harmed by spending on a
+product that doesn't work for their system, and the researcher's
+credibility will be reduced.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\subsection{R Markdown}\label{r-markdown}
+
+This is an R Markdown document. Markdown is a simple formatting syntax
+for authoring HTML, PDF, and MS Word documents. For more details on
+using R Markdown see \url{http://rmarkdown.rstudio.com}.
+
+\end{document}

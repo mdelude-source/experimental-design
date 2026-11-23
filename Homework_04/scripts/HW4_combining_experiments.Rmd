@@ -1,0 +1,232 @@
+---
+title: "Combining Experiments"
+output: pdf_document
+---
+
+# TPSS 603 - Experimental Design
+## Split-Plot Combining Experiments
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(raster)
+library(lattice)
+library(agricolae)
+library(plotrix)
+library(car)
+library(here)
+library(ggplot2)
+library(multcompView)
+library(MASS)
+```
+
+---
+
+## Part 1: Combining Experiments Analysis
+
+**Scenario:** We are exploring a dataset of alfalfa yield trials designed to compare the performance of 5 entries (varieties) of alfalfa in three different locations (environments). This problem set focuses on one important performance trait: crude protein content, in g per kg leaf dry matter (LeafCP) at time of harvest. The five varieties were grown in 4 replicate plots (blocks) at each of three locations. Location 1 = North, 2 = South, and 3 = South-East. Your overall task is to analyze the results and extract recommendations about the relative leaf protein contents of the different varieties in the different locations.
+
+**Information:**
+
+- Whole Plot is the `Loc` column.
+- Split Plot is the `Entry` column.
+- Block is the `Rep` column.
+
+```{r}
+alfalfa <- read.csv(here("Homework_04", "data", "HW4_Combined_experiments.csv"))
+
+str(alfalfa) # what are factors what are numeric, is everything as it should be?
+#A: only LeafCP is numeric, the rest are characters and are turned into factors later)
+
+summary(alfalfa)
+
+  alfalfa$Entry <- factor(alfalfa$Entry)
+  alfalfa$Loc <- factor(alfalfa$Loc)
+  alfalfa$Block <- factor(alfalfa$Block)
+str(alfalfa)
+```
+
+### Create a preliminary visualization
+```{r}
+#letting the Block data combine in a violin plot to get a visual for how crude 
+#protein varies by variety and location
+
+ggplot(data = alfalfa,
+       aes(y = LeafCP,
+           x = Entry,
+           fill = Loc)) +
+  geom_violin(alpha = 0.5)
+```
+
+### Summarize the data by Treatment
+```{r}
+  
+alf_stats <-
+  alfalfa |>
+
+#The Treatment is Entry
+  group_by(Entry) |> # <- remember to group by the important factor/s
+  summarise(Means = mean(LeafCP), SE = std.error(LeafCP), CV = cv(LeafCP)) 
+#calculate statistic for variable of interest
+alf_stats
+```
+
+### Question 1
+**Write the linear additive model for a single location, and then do the same for the locations combined (write the linear additive model for a RCBD and a split plot).**
+
+**Answer:** y~ijk~ = u + a~i~ + B~j~ + e~ijk~
+Where y = response (Crude Protein content)
+u = grand mean
+a = the effect of being a certain Entry
+B = the effect of being in a certain Block
+e = standard error
+
+y~hij~ = u + p~h~ + a~i~ + s~hi~ + B~j~ + e~hij
+Where y = the crude protein content
+u = grand mean
+p = the replicate effect (Location)
+a = the effect of being a certain Entry
+s = the random error of the Location
+B = the effect of being in a certain Block
+e = standard error
+
+### Question 2
+**Construct an appropriate ANOVA table, showing sources, dfs, and appropriate F-tests.**
+
+```{r}
+
+alf_aov <- aov(data = alfalfa,
+                LeafCP~Entry*Loc + Error(Block / Loc))
+
+summary(alf_aov)
+
+#Treatment:Environment is high p, we can pool Environment means!
+```
+```{r}
+alf_assum<-aov(data = alfalfa,
+                LeafCP~Entry*Loc +
+                 Block/Loc)
+
+par(mfrow=c(2,2))
+plot(alf_assum)
+
+boxcox(alf_assum, lambda = seq(-5, 5, 1))
+
+shapiro.test(alf_assum$residuals)
+leveneTest(data = alfalfa, LeafCP~Entry*Loc)
+```
+
+### Question 3
+**Present results in tables or graphs, as appropriate, to justify your decision to combine the three experiments into one analysis, and to support your conclusions about the performances of the entries in the different locations.**
+
+```{r}
+alf_LSD <- LSD.test(alf_assum, trt = c("Loc","Entry"), console = TRUE)
+
+alf_plot <- alfalfa |>
+  group_by(Entry, Loc) |> 
+  ggplot(aes(x = Entry, y = LeafCP, fill = Loc)) +
+    geom_boxplot() +
+    labs(y = "Mean Crude Protein Weight") +
+    facet_wrap(~Loc)
+
+
+#not sure how to layer LSD numbers over a ggplot facet_wrap, doesn't seem 
+#to have an easier coding solution than just putting it on manually
+alf_plot
+```
+
+**Answer:** *Does the data require a transformation?* No! While the qq plot flies off at the top end, the boxcox plot is near 1, which means it doesn't require transformation. The difference between Location and Entry is not significant so location can get combined.
+
+### Question 4
+**Use agricolae to do the analysis.**
+
+```{r}
+
+model<-with(alfalfa,sp.plot(Block, Entry, Loc, LeafCP)) # calculate correct 
+#split plot with agricolae
+#^This anova matches the aov() one from the earlier question!
+
+#create correct error terms
+gla<-model$gl.a #degrees of freedom for error A
+glb<-model$gl.b #degrees of freedom for error B
+Ea<-model$Ea # Mean sq. error A
+Eb<-model$Eb # Mean sq. error B
+
+```
+
+**Mean Comparison of Main Plot Factor**
+```{r}
+
+whole_p <- with(alfalfa, LSD.test(LeafCP, trt = Entry, console = TRUE,
+                                 MSerror = Ea,
+                                 DFerror = gla)) #calculate whole plot mean 
+#comparision using LSD.test
+```
+
+**Mean Comparison of Sub-Plot Factor**
+```{r}
+sub_p <- with(alfalfa,LSD.test(LeafCP, trt = Loc, console = TRUE,
+                                 MSerror = Eb,
+                                 DFerror = glb)) #calculate split plot mean comparision using LSD.test
+```
+
+**Mean Comparison of Interaction**
+```{r}
+interaction_p <- with(alfalfa,LSD.test(LeafCP, console = TRUE,
+                                       trt = interaction(Entry, Loc),
+                                       MSerror = Eb,
+                                       DFerror = glb)) #calculate interaction mean comparision using LSD.test
+```
+
+### Question 5
+**Based on results of your analysis, prepare a summary graph or table, and write an accompanying paragraph that would explain your conclusions to a non-expert.**
+
+*Sub-Plot Factor Bar Graph*
+```{r}
+bar.group(sub_p$groups, ylim = c(0, 400))#create sub-plot LSD graph
+title(cex.main=1, main = "LSD Means Separation of Location", ylab = "Mean Crude Protein", xlab = "Location ID")
+```
+
+*Interaction Factor Bar Graph*
+```{r}
+bar.group(interaction_p$groups, las = 2, decreasing = TRUE, horiz = FALSE, ylim=c(0, 375), col = "navy", border = "gray", density = 8, cex.axis = 0.5) #create interaction LSD graph
+title(cex.main=1, main = "LSD groups of Entry by Location", xlab = "Entry:Location", ylab = "Mean Crude Protein")
+```
+
+**Answer:** If you take a look at this first graph, you'll see that we have three locations, and only two different letters. The a and b are a way to think about how likely two pieces of data are related! Locations 1 and 2 both have a, meaning that results between those fields conditions differ significantly, however, location 3 has a b, which means something about that location makes all our seeds stunted. I mention the letters because in this 2nd figure there are so many more. The main takeaway from this one is how Seed A does much better in Location 3 than D, while in Location 1 and 2 D produces more than A.
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** The alfalfa variety trial was sponsored by a seed company that wants to name a single "top-performing" variety to market across its entire regional sales territory, which spans all three trial locations. The North and South locations are large, high-input commercial farming areas that make up most of the company's sales. The South-East location represents a smaller, historically underserved farming community growing on more marginal, lower-fertility land.
+
+Your combined analysis shows a significant location-by-variety interaction: one variety has the highest crude protein averaged across all locations, but it is actually one of the worst performers at the South-East location specifically, where a different, lower-marketed variety does best. The company asks you to report only the combined, averaged results and skip discussion of the interaction effect, since it would "complicate the marketing message" and the South-East market is a small share of their overall sales.
+
+Consider this scenario as you answer the following questions.
+
+### Question 6
+**What is the ethical tension or dilemma?**
+
+**Answer:** Pressure to publish misleading data
+
+### Question 7
+**Who holds power in this situation?**
+
+**Answer:** The company funding the study has ultimate power to not publish results
+
+### Question 8
+**Whose voices are missing or marginalized?**
+
+**Answer:** The under-served community on lower-fertility land
+
+### Question 9
+**What harm could occur — even unintentionally?**
+
+**Answer:** The poorer community will buy the wrong seeds and thus be wasting some of their already tight funds, when it could've been used to buy seeds that fare better.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

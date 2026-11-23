@@ -1,0 +1,249 @@
+---
+title: "HW5_Regression"
+author: "Mano'ike Delude"
+output: pdf_document
+---
+
+# TPSS 603 - Experimental Design
+## Regression
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+library(car)
+library(dplyr)
+library(ggplot2)
+library(MuMIn)
+library(here)
+library(soiltestcorr)
+library(rcompanion)
+```
+
+---
+
+## Part 1: Regression Analysis
+
+**Scenario:** Here we provide two datasets. The first is a simple linear regression looking at the relationship between vertical jump (cm) and triple jump (cm). The second dataset explores a non-linear relationship between nitrogen use and yield. Conduct a linear regression on the first and a polynomial regression on the second. Interpret your results and create a visual representation of your data.
+
+```{r}
+#load data for linear regression
+jump_lin <- read.csv(here("Homework_05","data","HW5_triple_vertical.csv"))
+str(jump_lin)
+
+#load in data for polynomial regression
+pol_yield <- read.csv(here("Homework_05","data","HW5_Nitrogen_polynomial.csv"))
+str(pol_yield)
+
+```
+
+### Question 1
+**Present a scatter-plot of vertical jump vs. triple jump and nitrogen predicting yield.**
+
+```{r jump-lrm, fig.cap="Linear Regression on Triple-Jump dataset"}
+#Plot linear data
+ggplot(data=jump_lin,mapping=aes(x=vertical_cm,y=triple_cm)) +
+  geom_point() +
+  geom_smooth(method="lm") +
+  theme_bw()+
+  labs(title="Vertical jump relationship to triple jump") +
+  xlab("Vertical Jump (cm)") +
+  ylab("Triple Jump (cm)")
+```
+
+
+```{r nit-poly, fig.cap="Polynomial Regression on Nitrogen data"}
+#plot polynomial data
+ggplot(data=pol_yield,mapping=aes(x=Nitrogen_per_acre, y=yield_bu)) +
+  geom_point() +
+  geom_smooth() +
+  theme_bw()+
+  labs(title="Nitrogen impact on Yield") +
+  xlab("Nitrogen (lbs/acre)") +
+  ylab("Yield (bu)")
+```
+
+### Question 2
+**Describe the relationships you observe in the two different datasets.**
+
+**Answer:** \@ref(fig:jump-lrm) shows a positive linear correlation between one's vert and triple jump, the model is more precise in the middle range but becomes less so on the two ends. This predicts that the higher a person can vert, the longer a person can triple jump.\
+\
+\@ref(fig:nit-poly) shows what seems to be a linear relationship in the sub-100 N lbs/acre range, but becomes asymptotic as we approach the end. This predicts that Nitrogen helps yield to a point, before gains become incremental.
+
+### Question 3
+**Use regression analysis to evaluate the effect of vertical jump on triple jump.**
+
+```{r}
+#create regression model for linear regression
+jump_lm <- lm(data = jump_lin, triple_cm ~ vertical_cm)
+summary(jump_lm)
+
+#create variables for polynomial regression
+
+#create models for your polynomial regressions
+#fit linear model
+yield_lm<-lm(yield_bu ~ Nitrogen_per_acre,data = pol_yield)
+summary(yield_lm)
+#fit quadratic model
+yield_lm2<-lm(yield_bu ~ poly(Nitrogen_per_acre, 2), data = pol_yield)
+summary(yield_lm2)
+#fit cubic model
+yield_lm3<-lm(yield_bu ~ poly(Nitrogen_per_acre, 3),data = pol_yield)
+summary(yield_lm3)
+#compare models
+anova(yield_lm, yield_lm2, yield_lm3)
+compareLM(yield_lm, yield_lm2, yield_lm3)
+```
+
+lm2 (quadratic) is the one for nitrogen data. Cubic function adds an insignificant F. AIC is lowest for this as well
+
+```{r}
+#| eval: false
+#| message: false
+
+##If you are feeling ambitious try fitting a plateau function (Mitscherlich equation)
+mitscherlich(
+  data = pol_yield,
+  stv = Nitrogen_per_acre,
+  ry = yield_bu,
+  type = 100,
+  target = 90,
+  tidy = FALSE,
+  plot = TRUE,
+  resid = TRUE
+)
+#^this is to check work against
+
+```
+
+### Question 4
+**Write a linear model for your final models for the jump and nitrogen datasets.**
+
+**Answer:** /
+Jump: (Triple Jump) = grand mean + B(High Jump) + standard error
+/
+Nitrogen: (Yield) = grand mean + B1(Nitrogen) + B2(Nitrogen)^2 + standard error
+
+### Question 5
+**Based on your analysis, estimate and graph the 95% CI and 95% Prediction Interval for the models.**
+
+```{r}
+#vertical jump
+ci_jump <- predict(jump_lm, interval="confidence",level=0.95)
+pi_jump <- predict(jump_lm, interval="prediction",level=0.95)
+
+#polynomial yield
+ci_ny <- predict(yield_lm2, interval="confidence",level=0.95) # the model object is the model you have created
+pi_ny <- predict(yield_lm2, interval="prediction",level=0.95)# the model object is the model you have created
+
+```
+
+### Question 6
+**Graph your models with 95% CI and 95% PI.**
+
+```{r}
+#linear model
+
+x_vals <- jump_lin$vertical_cm 
+
+plot(triple_cm ~ vertical_cm, data = jump_lin, xlab="Vertical Jump Height (cm)",ylab="Triple Jump Length (cm)",main="Triple Jump:Vertical Jump correlation",col="black", xlim = c(30,75), ylim = c(375,800)) 
+lines(jump_lm, col = "black")      # Best fit line
+lines(x_vals, ci_jump[, "lwr"], col = "blue")       # CI Lower Bound
+lines(x_vals, ci_jump[, "upr"], col = "blue")       # CI Upper Bound
+lines(x_vals, pi_jump[, "lwr"], col = "red")        # PI Lower Bound
+lines(x_vals, pi_jump[, "upr"], col = "red")
+```
+
+
+```{r}
+#polynomial model
+x_nit <- pol_yield$Nitrogen_per_acre
+
+with(pol_yield,plot(x=Nitrogen_per_acre,y=yield_bu,xlab="Nitrogen Per Acre",ylab="Yield",main="Nitrogen Input:Yield Correlation",col="gold"))
+lines(yield_lm2, col = "black") #plot best fit line
+lines(x_nit, ci_ny[, "lwr"], col = "blue") #plot CI lower bound
+lines(x_nit, ci_ny[, "upr"], col = "blue") #plot CI upper bound
+lines(x_nit, pi_ny[, "lwr"], col = "red") #plot PI lowerbound
+lines(x_nit, pi_ny[, "upr"], col = "red")#plot PI upperbound
+
+```
+
+### Question 7
+**How much variation did the model explain?**
+
+```{r}
+#linear model for jump
+summary(jump_lm)$adj.r.squared
+
+#polynomial nitrogen model
+summary(yield_lm2)$adj.r.squared
+
+```
+
+**Answer:** 0.688 (above half) of the jump stats, and nearly all (0.997) of the Nitrogent points
+
+### Question 8
+**Interpret your results. How should someone improve their triple jump? How should one use nitrogen to improve yield?**
+
+**Answer:** If you would want to improve your triple jump, you should also improve your vertical jump.\
+You should definitely input Nitrogen, but between 100~150 lbs an acre you'll see diminishing returns, and realistically stop before the cost:benefit of incremental yield gains against an extra 50 pounds of nitrogen wastes your farm money.
+
+---
+
+## Part 2: Data Ethics
+
+### Scenario A: The Jump Model
+
+**Scenario:** Your vertical-jump-to-triple-jump regression model was built from data collected at a youth track camp. Your data only spans athletes ages 12–16 with vertical jumps between roughly 30–70 cm. A talent-recruiting company wants to license your model to screen much younger children (ages 8–10) for "elite athlete potential," extrapolating the regression line well below the range of vertical jumps you actually measured, and using the predicted triple-jump score — not the wide prediction interval around it — to rank children and recommend some for expensive private training programs while telling other families their child is "unlikely to be competitive."
+
+Consider this scenario as you answer the following questions.
+
+### Question 9
+**What is the ethical tension or dilemma?**
+
+**Answer:** Misrepresenting correlations past the scope of the data. There's a huge difference between 8-10 and 12-16 year olds physically.
+
+### Question 10
+**Who holds power in this situation?**
+
+**Answer:** The researcher who made the model.
+
+### Question 11
+**Whose voices are missing or marginalized?**
+
+**Answer:** 8-10 year old athletes, their parents
+
+### Question 12
+**What harm could occur — even unintentionally?**
+
+**Answer:** Parents of the kids recommended for more expensive private training, based on misrepresented data, will be financially harmed when it turns out their 9 year old isn't Olympic-quality.
+
+### Scenario B: The Nitrogen Model
+
+**Scenario:** Your polynomial nitrogen-yield model shows that yield gains level off well before the highest nitrogen rates in your dataset additional nitrogen beyond a certain point adds cost and can leach into groundwater without meaningfully increasing yield. A fertilizer distributor that sponsored the trial wants your report to feature only the linear model (which keeps showing yield increasing with more nitrogen across the full range) rather than the better-fitting quadratic or cubic models, and wants your final recommendation to growers to round up to a higher nitrogen rate than your model's plateau would justify, since it "keeps the recommendation simple" and increases fertilizer sales. Many of the growers who would receive this recommendation farm on small plots near a shared watershed downstream of the trial site.
+
+Consider this scenario as you answer the following questions.
+
+### Question 13
+**What is the ethical tension or dilemma?**
+
+**Answer:** Falsifying the data, and turning a blind eye to pollution for the sake of profits.
+
+### Question 14
+**Who holds power in this situation?**
+
+**Answer:** The Researcher presenting the data has some power in saying no, but the ultimate power lies with the funder, who may choose to not report anything.
+
+### Question 15
+**Whose voices are missing or marginalized?**
+
+**Answer:** The (quite literal) downstream communities who rely on the watershed.
+
+### Question 16
+**What harm could occur — even unintentionally?**
+
+**Answer:** Fiscal: farmers purchasing and wasting fertilizer makes their business cost more. Physical: the watershed ecosystem will be harmed, and people who use the water will get sick.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

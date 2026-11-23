@@ -1,10 +1,10 @@
 ---
-title: "TPSS603_HW01_template"
+title: "TPSS603_HW01_delude_m"
 output: pdf_document
 ---
 
 # TPSS 603 - Experimental Design
-### Name: Manōʻike Delude
+### Name: Manō'ike Delude
 
 ```{r setup, include=FALSE}
 
@@ -15,6 +15,8 @@ library(raster)
 library(agricolae)
 library(ggplot2)
 
+#QOL library
+library(here)
 ```
 
 ---
@@ -27,95 +29,100 @@ library(ggplot2)
 ```{r}
 
 #create a randomization for a CR design
-design.crd() #function from agricolae that will do the randomization
+#loading vectors
+trt <- c("A","B","C")
+r <- c(5,5,5)
+design.crd(trt, r) #function from agricolae that will do the randomization
 
 ```
 
 ### Question 2
 **What is the Null Hypothesis?**
 
-**Answer:**
+**Answer:** __The average for all treatments is the same.__
 
 ### Question 3
 **What is the Alternative Hypothesis?**
 
-**Answer:**
+**Answer:** __The average for at least one pair of the treatments is different__
 
 ### Question 4
 **What is the Linear Additive Model?**
 *(this is the abstraction of the generalized model)*
 
-**Answer:**
+**Answer:** __A mathematical abstraction describing how the outcomes of an experiment can be systematically explained by the treatments, and describes all sources of variation in an ANOVA table__
 
 ```{r}
 #this is where you use the data from the file attached
-data <- read.csv("") #read in the datafile
+data <- read.csv(here("Homework_01/data/HM1_CR_design.csv")) #read in the datafile
 head(data) #look at the first 6 lines of the data
 
 #create the anova model for the design using the data provided
-mod <- aov("CR design model", data=data) #create a linear model for the data
-
+model <- aov(Plant_height~Trt, data) #create a linear model for the data
+summary(model)
 ```
 
 ### Question 5
 **What are the treatments?**
 
-**Answer:**
+**Answer:** __Fert1, Fert2, Fert3__
 
 ### Question 6
 **How many factors are being studied?**
 
-**Answer:**
+**Answer:** __1: plant height__
 
 ### Question 7
 **Produce the ANOVA table for the experiment.**
 
 ```{r}
 
-summary() #Print the summary of the anova table from the model above
+summary(model) #Print the summary of the anova table from the model above
 
 ```
 
 ### Question 8
 **Is the normality of residuals assumption true (qqplot)?**
 
-**Answer:**
+**Answer:** __For most of the residuals, yes! They follow the qqplot line pretty closely, and the Scale Location line is relatively flat. Cook's lines don't even show up on the Leverage graph.__
 
 ```{r}
 
 par(mfrow=c(2,2)) #set the plot
-plot(mod) #use the plot function to make the qq plot
+plot(model) #use the plot function to make the qq plot
 
 ```
 
 ### Question 9
 **Do we reject or fail to reject the null hypothesis?**
 
-**Answer:**
+**Answer:** __Reject Null__
 
 ### Question 10
 **Construct a contrast between two treatments and interpret the result.**
 
 ```{r}
 
-mod # look at linear model
-summary(mod) # look at the summary of the model
-fit.contrast(mod,"Trt", c()) # create the contrast between two treatments
+model # look at linear model
+summary(model) # look at the summary of the model
+fit.contrast(model,"Trt", c(-1, 0, 1)) # create the contrast between two treatments
+#this will compare Fert1 and Fert3
 
 ```
 
-**Answer:**
+**Answer:** __t value is not zero! Fert 3 has a mean less than Fert 1, P is very low (significant)__
 
 ### Question 11
 **Construct all pairwise comparisons using an HSD or LSD, create a plot, and interpret the results.**
 
 ```{r}
+p<-TukeyHSD(model, "Trt")
 
-
+plot(p)
 
 ```
 
-**Answer:**
+**Answer:** __Order of Fertilizer effectiveness in increasing plant height: Fert1>Fert3>Fert>2__
 
 ---
 
@@ -130,22 +137,22 @@ Consider this scenario as you answer the following questions.
 ### Question 12
 **What is the ethical tension or dilemma?**
 
-**Answer:**
+**Answer:** __A violation of privacy, a loss of credit, and therefore value for the small farm who contributed 1/3rd of the input data to the project__
 
 ### Question 13
 **Who holds power in this situation?**
 
-**Answer:**
+**Answer:** __The researcher in charge of writing the publication__
 
 ### Question 14
 **Whose voices are missing or marginalized?**
 
-**Answer:**
+**Answer:** __The small farmer__
 
 ### Question 15
 **What harm could occur — even unintentionally?**
 
-**Answer:**
+**Answer:** __Loss of potential income for the small farm showing that they contributed to a paper, and the loss of intelectual property over their proprietary blend.__
 
 ---
 

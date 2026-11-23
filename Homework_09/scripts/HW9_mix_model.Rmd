@@ -1,0 +1,243 @@
+---
+title: "HW_MixedModel"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+# TPSS 603 - Experimental Design
+## Mixed Model Experiments
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(raster)
+library(lattice)
+library(agricolae)
+library(lme4)
+library(lmerTest)
+library(car)
+library(nlme)
+library(reshape2)
+library(ggplot2)
+library(multcomp)
+library(merTools)
+library(emmeans)
+library(multcompView)
+library(here)
+```
+
+---
+
+## Part 1: Mixed Model Analysis
+
+**Scenario:** Mixed models contain both fixed and random effects. Recall that with fixed-effects models you are concerned with making inference only with the classes of data you have sampled; with random effects, you are concerned with the entire population from which your data were sampled. This means that your choice of random and fixed variable often has to do with what inference you wish to make. In other words, fixed effects are typical main effects in a regression/ANOVA model — in the context of this assignment they are the non-random part of a mixed model. Random effects are those effects that are specific to an experimental unit. In the context of most studies the experimental unit is the level of some grouping factor, but this is only one possibility — one sample from a larger population.
+
+For this homework you will be using data from a study on perennial ryegrass (*Lolium perenne* L.). The data here explore field trials of multiple genotypes in multiple locations with multiple harvests. The classic way of doing this analysis would be a split-split plot. However, this would not account for the difference between the effects of calendar years, which are associated with external environmental variation, and harvest years, which represent internal yield-formation processes of the perennial crop.
+
+In this homework you will explore the differences between the fixed-effect and mixed-effect models.
+
+**Variables:**
+
+- *Response variable:* `yld` = cumulative yield per plot and year (sum of cuts)
+- *Treatment factor:* `GEN` = genotype, variety
+- *Block factors:* `LOC` = location; `blk` = block of randomized complete block design, nested within `LOC`; `yr` - *calendar year:* `YEAR1` = initial year of planting
+- *Repeated factor:* `har` = harvest year
+
+```{r}
+mm <- read.csv(here("Homework_09","data","HW9_Lolium_data.csv")) #read.csv("path to data file")
+head(mm)# look at the first 6 lines
+str(mm) #make sure each variable is what it is supposed to be (factor, numeric, character)
+
+mm2<-subset(mm, YEAR1 == 2001)
+str(mm2)
+mm2$blk<-as.factor(mm2$blk)
+mm2$LOC<-as.factor(mm2$LOC)
+
+str(mm)
+#create a random effects model
+mm$blk<-as.factor(mm$blk)
+mm$LOC<-as.factor(mm$LOC)
+mm$yr<-as.factor(mm$yr)
+mm$har<-as.factor(mm$har)
+mm$GEN<-as.factor(mm$GEN)
+str(mm)
+```
+
+### Question 1
+**State the null and alternative hypotheses for the experiment.**
+
+**Answer:**
+
+*H0:* Genotype has no effect on yield
+
+*HA:* At least one Genotype has some significant effect on yield
+
+### Question 2
+**Write the linear additive model and define the components of the mixed model. The structure will be a randomized complete block with random covariates — are they nested or crossed?**
+
+**Answer:** Yield = (Genotype)[Fixed] + (Harvest #)[crossed] + (Harvest year)[crossed] (Location/block)[nested]
+
+### Question 3
+**Conduct an analysis and summarize the results.**
+
+```{r}
+###preliminary visualization of yield as response of Genotype colored by LOC and faceted by year
+ggplot(mm, aes(x= GEN, y= yld, col =  LOC))+
+  geom_boxplot() +
+  facet_wrap(~yr) +
+  xlab('Location')+
+  ylab('Yield')+
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+```{r}
+##Create the fixed effect model this will be a split-split plot
+#year is whole plot
+#loc is split plot
+#GEN is split-split plot
+model = with(mm, ssp.plot(block = blk, pplot =  yr, splot = LOC, ssplot= GEN, Y= yld)) # recall to understand the syntax use ?ssp.plot
+summary(model)
+```
+
+
+```{r}
+cc_lm_for_assum<-aov(yld ~ yr*GEN*LOC + blk/LOC, data=mm) # if you need to know the specification for aov use ?ssp.plot
+
+#check assumptions
+plot(cc_lm_for_assum)
+### Levene test for homogeneity of variance
+leveneTest(yld~yr*GEN*LOC ,data = mm)  #if you do not know the syntax ?leveneTest
+
+gla<-model$gl.a;
+glb<-model$gl.b;
+glc<-model$gl.c
+Ea<-model$Ea;
+Eb<-model$Eb;
+Ec<-model$Ec
+
+out1<-with(mm,LSD.test(yld,yr,gla,Ea,console=TRUE))
+out2<-with(mm,LSD.test(yld,LOC,glb,Eb,console=TRUE))
+out3<-with(mm,LSD.test(yld,GEN,glc,Ec,console=TRUE))
+plot(out1,xlab="Whole Plot",las=1,variation="IQR")
+plot(out2,xlab="Split Plot",variation="IQR")
+plot(out3,xlab="Split Split Plot",variation="IQR")
+```
+
+### Question 4
+**Describe the result.**
+
+**Answer:** Visually, it looks like year has an impact on results (2003 is lower than the rest). There is some violation of the homogeneity of variances with the simple ssp model. Location also seemed to have an effect on yield. WD 00518 is the worst performing and WD 1269(and the other a's) are the best performing genotypes when adjusting for year and location.
+
+### Question 5
+**Run the mixed model, then write a brief summary of the results.**
+
+```{r}
+#random effects
+#yr
+#LOC
+#blk
+
+#fixed effects
+#GEN
+#har
+
+cc_mixed = model <- lmer(yld ~ GEN + (1|LOC/blk) +(1|yr), data = mm2) #random effect of student
+
+summary(cc_mixed)
+anova(cc_mixed) # anova table of random effects
+rand(cc_mixed) #significance of random effects
+
+#residuals
+plot(cc_mixed) #look at the residuals
+
+##confidence intervals
+confint(cc_mixed) #generate confidence intervals
+ranef(cc_mixed)$LOC %>% head(8) #get the random effects of the first 8 rows
+
+#get fixed effects of each treatment
+coef(cc_mixed)$LOC %>% head(8)
+
+REsim(cc_mixed)  # mean, median and sd of the random effect estimates
+
+plotREsim(REsim(cc_mixed))  # plot the interval estimates
+
+```
+
+```{r}
+# Compute estimated marginal means
+emmeans_results <- emmeans(cc_mixed, ~ GEN)
+
+# Perform Tukey's HSD on pairwise comparisons
+tukey_results <- pairs(emmeans_results, adjust = "tukey")
+
+# Print results
+print(tukey_results)
+
+tukey_df <- as.data.frame(tukey_results)
+
+# Generate compact letter display (CLD) from the estimated marginal means
+cld <- cld(emmeans_results, Letters = letters, adjust = "tukey")
+
+# Convert the CLD results to a data frame
+cld_df <- as.data.frame(cld)
+
+# Create the plot, adding CLD labels on top of the error bars
+ggplot(cld_df, aes(x = GEN, y = emmean)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = emmean - SE, ymax = emmean + SE), width = 0.2) +
+  geom_text(data = cld_df, aes( y = emmean + SE + 1, label = .group),
+           color = "blue", size = 4) +
+  labs(
+    title = "Tukey HSD Pairwise Comparisons with Compact Letter Display",
+    x = "Comparisons",
+    y = "Estimated Difference (± SE)"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+**Answer:** The Mixed model implies that WD 00411 is the top genotype and WD 01174(and other a's) are the bottom.
+
+### Question 6
+**Compare results from the mixed model and fixed effect model.**
+
+**Answer:** WD 00411 has the highest marginal means when adjusting for the mixed model, this contrasts with its position in the fixed effect model (hjk, in the middle). WD 01174(and the other a's) are in lower-middle range in the fixed effect model. This shows that some genotypes are more or less adapted to the locations they were planted in, and that had an effect on results in the fixed effect model.
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** This ryegrass trial is part of a cultivar development program working toward the commercial release of a new genotype. The choice between a fixed-effects model and a mixed-effects model isn't just a technical detail it changes what population the conclusions can honestly be generalized to. Treating location as fixed limits your conclusions to the specific locations tested; treating location as random supports broader claims about how the genotype would perform across untested environments in the wider region.
+
+A seed company partner wants to submit an application for commercial release and market the winning genotype as a "top performer across the region," and asks you to base that claim on whichever model fixed or mixed  happens to produce the more favorable-looking result for their genotype, regardless of which model's assumptions and scope of inference actually justify that broader regional claim.
+
+Consider this scenario as you answer the following questions.
+
+### Question 7
+**What is the ethical tension or dilemma?**
+
+**Answer:** Presenting data with the intent to mislead for financial gain.
+
+### Question 8
+**Who holds power in this situation?**
+
+**Answer:** The PI at the head of the cultivar development program, and the entities funding the project.
+
+### Question 9
+**Whose voices are missing or marginalized?**
+
+**Answer:** The researcher analyzing the data, the farmers who will buy the new ryegrass seeds
+
+### Question 10
+**What harm could occur — even unintentionally?**
+
+**Answer:** Farmers are harmed financially by relying on a suboptimal genotype, and the researcher's reputation is harmed.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

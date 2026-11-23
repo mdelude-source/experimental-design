@@ -1,0 +1,181 @@
+---
+title: "HW7_ANCOVA"
+author: "Mano'ike Delude"
+date: '11/6/2026'
+output:
+  pdf_document: default
+  word_document: default
+---
+
+# TPSS 603 - Experimental Design
+## Analysis of Covariance (ANCOVA)
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+library(tidyverse)
+library(ggpubr)
+library(car)
+library(dplyr)
+library(ggplot2)
+library(MuMIn)
+library(agricolae)
+library(multcomp)
+library(here)
+library(emmeans)  
+library(rstatix)
+
+```
+
+---
+
+## Part 1: ANCOVA Analysis
+
+**Scenario:** An RCB with 6 treatments (corn varieties) and four replicates was conducted. However, as spring progressed, plot conditions affected seedling emergence, which in turn changed ultimate yields. Hence, emerged plants were counted in each plot, and those counts were considered as a covariate in analysis of the final yields.
+
+```{r}
+corn_dat <- read.csv(here("Homework_07", "data", "HW7_ANCOVA.csv"))
+str(corn_dat) #make sure variables are the right type variable, e.g. factor, numeric
+
+  corn_dat$Block <- factor(corn_dat$Block)
+  corn_dat$Corn_Variety <- factor(corn_dat$Corn_Variety)
+# Making block and varieties leveled factors so plotting works out better later
+  
+str(corn_dat)
+```
+
+### Question 1
+**Write linear additive models for this study, with and without the covariate.**
+
+**Answer:**
+
+The linear model for the design without the covariate is:/
+Yield = mu + (Variety) + (Block) + e
+
+The linear model for the design with the covariate is:
+Yield = mu + (Variety) + (Block) + (covariant slope)*(Plants) + e
+
+```{r}
+#Covariate aov has treatment before covariate
+str(corn_dat)
+corn_lm.cov <- lm(Yield ~ Corn_Variety + Plants, data = corn_dat) #Plants as covariate
+corn_cov.aov <- aov(Yield ~ Corn_Variety + Plants, data = corn_dat) #Plants as covariate
+corn_cov.anova <- anova(corn_lm.cov)
+summary(corn_cov.anova)
+
+# Run the model with no covariate
+# Regular RCBD anova has Block before Treatment
+corn_lm <- lm(Yield ~ Block + Corn_Variety, data = corn_dat) #No covariate
+corn.aov <- aov(Yield ~ Block + Corn_Variety, data = corn_dat)#No covariate
+corn.anova <- anova(corn_lm)
+summary(corn.anova)
+```
+
+### Question 2
+**Conduct an initial ANOVA of yields without covariate noting sources of variation, degrees of freedom, and use an LSD to compare yields among varieties. Conduct a parallel analysis of plants.**
+
+```{r}
+
+corn.anova <- aov(Yield~Corn_Variety, data = corn_dat) #create anova object for yields
+plants.anova <- aov(Yield~Plants, data = corn_dat) #create anova object for plants
+corn.lsd <- LSD.test(y=corn.anova,
+                     trt = "Corn_Variety") #mean separation for anova without covariate
+plants.lsd <- LSD.test(y=plants.anova,
+                       trt = "Plants") #mean separation for anova for plants
+
+corn.lsd
+plants.lsd
+
+```
+
+### Question 3
+**Graphically examine the relationship between the covariate and the treatments.**
+
+```{r}
+ggplot(data=corn_dat,
+       aes(x=Plants, y=Yield, group=Corn_Variety, col=Corn_Variety
+                   )) +
+  geom_smooth(method = "lm", se = FALSE) + #Confidence line gets in the way when roughly examining if Plants has an effect
+  theme_minimal() +
+  labs(
+    title = "Yield vs. Plant Density by Corn Variety",
+    x = "Number of Plants (Covariate)",
+    y = "Yield (Response Variable)",
+    color = "Corn Variety (Treatment)"
+  )
+
+#Plant count has differing slopes, so it has an effect on Yield
+```
+
+### Question 4
+**Conduct a formal ANCOVA of yields, using plants as a covariate.**
+
+```{r}
+corn_cov.anova <- aov(Yield ~ Corn_Variety + Plants, data = corn_dat) #plants will be the covariate
+
+summary(corn_cov.anova)
+
+c_anov_t <- anova_test(Yield ~ Corn_Variety + Plants, data = corn_dat) #significant Ps on covariant
+
+summary(c_anov_t)
+```
+
+### Question 5
+**Conduct a mean separation based on ANCOVA adjusted means.**
+
+```{r}
+corn_emm <- emmeans_test(Yield~Corn_Variety,
+             covariate = Plants,
+             p.adjust.method = "bonferroni",
+             data = corn_dat)
+
+c_emm <- get_emmeans(corn_emm)
+
+summary(corn_emm)
+c_emm
+
+model <- lm(Yield ~ Corn_Variety + Plants, data = corn_dat)
+corn_emm_object <- emmeans(model, specs = ~ Corn_Variety)
+
+pairs(corn_emm_object, adjust = "bonferroni")
+```
+
+### Question 6
+**Based on your analysis, write a paragraph explaining the biological findings of the study, and explain why conclusions of the two analyses differed.**
+
+**Answer:** When accounting for the adjusted mean from ANCOVA for stand count, the lowest (A) isn't a far from the bottom of the pack as it seems. Looking at the covariance does cover up germination data, which is important for farmers. When comparing the effect of the stand count covariant pairwise, the contrasts among all varieties are not statistically significant. This means that while lower stand counts do impact the mean yield, the effect is spread across all in the trial.
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** One of the six corn varieties in this trial had noticeably poorer seedling emergence than the others, likely due to lower seed vigor. Once you adjust for plant stand using ANCOVA, this variety's  yield per surviving plant looks excellent in fact, the covariate-adjusted analysis ranks it as the top performer. But the raw, unadjusted yield data show the variety actually produced one of the lowest total yields per acre, because so few of its seeds emerged in the first place.
+
+The seed company that owns the variety  wants your report to feature only the ANCOVA-adjusted ranking in marketing materials aimed at farmers deciding what to plant next season, describing the variety  as the "top-yielding variety in university trials," without mentioning its poor field emergence or the unadjusted yield numbers that reflect what a farmer would actually harvest.
+
+Consider this scenario as you answer the following questions.
+
+### Question 7
+**What is the ethical tension or dilemma?**
+
+**Answer:** Falsifying data for financial gain
+
+### Question 8
+**Who holds power in this situation?**
+
+**Answer:** The seed company has the power to withdraw their varieties results from the study
+
+### Question 9
+**Whose voices are missing or marginalized?**
+
+**Answer:** The farmers who rely on this research, and the university researchers who worked on it
+
+### Question 10
+**What harm could occur — even unintentionally?**
+
+**Answer:** Farmers will be hurt financially from relying on bad yield data, the credibility of the university's research will be damaged.
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.

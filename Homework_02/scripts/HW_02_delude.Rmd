@@ -1,0 +1,156 @@
+---
+title: "HW02 - Randomized Complete Block Design (RCBD)"
+output:
+  pdf_document: default
+---
+
+# TPSS 603 - Experimental Design
+### Name: Mano'ike Delude
+
+```{r setup, include=FALSE}
+
+library(car)
+library(agricolae)
+library(multcomp)
+library(ggplot2)
+library(ggpubr)
+library(tidyverse)
+
+```
+
+---
+
+## Part 1: RCBD Analysis
+
+**Scenario:** An agronomist was interested in testing the impact of planting date on the biomass and nitrogen uptake of a winter rye cover crop. Five planting dates were explored at a single location on the US/Canada border. The design was a randomized complete block with four replications.
+
+### Question 1
+**State the null and alternative hypotheses for the experiment.**
+
+**Answer:** 
+
+Null Hypothesis: __Biomass and nitrogen uptake will not significantly different between planting dates (treatments).__
+
+Alternative Hypothesis: __Biomass and nitrogen will be significantly different between at least one pair of planting dates.__
+
+### Question 2
+**Write the linear model for a Randomized Complete Block Design.**
+*(recall this is the abstraction of the design)*
+
+**Answer:** __y~ij~ = u + a~i~ + B~j~ + e~ij~__
+__y~ij~ = observation of i treatment and j block__
+__u = grand mean__
+__a~i~ = the effect of being in treatment i__
+__B~j~ = the effect of being in block j__
+__e~ij~ = the residual error for i treatment and j block__
+
+### Question 3
+**Read in the data.**
+
+```{r}
+cc <- read.csv('C:/Users/cesiu/Desktop/OCN682 R/Experimental Design/experimental-design/Homework_02/data/HW2_RCBD.csv') #read in data
+head(cc)
+str(cc) # is everything that should be a factor a factor
+
+```
+
+### Question 4
+**Conduct an Analysis of Variance (ANOVA) for both of the response variables.**
+
+```{r}
+
+aov.ccb <- aov(biomass_Kg~Block  + Trt, data = cc)
+aov.ccn <- aov(N_uptake_Kg~Block  + Trt, data = cc)
+summary(aov.ccb)
+summary(aov.ccn)
+
+```
+
+### Question 5
+**Check the assumptions.**
+
+```{r}
+#check assumptions visually
+par(mfrow= c(2,2))
+plot(aov.ccb)
+plot(aov.ccn)
+```
+
+```{r}
+#check assumptions test
+shapiro.test(aov.ccb$residuals)
+shapiro.test(aov.ccn$residuals)#normality
+bartlett.test(biomass_Kg~Trt, data=cc)
+bartlett.test(N_uptake_Kg~Trt, data=cc)#equal variance
+```
+
+**Answer:** __Visually: qq plots show that the residuals are normally distributed (follows line), both the Scale-Location plots have a slight upward fan, so there could be some heteroscedasticity.__
+__residuals vs fitted plot: lines are a slight U shape (moreso with Biomass), but the points look distributed enough to imply homoscedasticity,__
+__leverage: some points in rep 4 are skewing the line but it seems relatively straight.__
+
+__Shapiro: both ps above significance, both variable types are normally distributed__
+__Bartlett: both tests for the homogeneity of variances have low ps__
+
+### Question 6
+**Write out the ANOVA table.**
+
+```{r}
+summary(aov.ccb)
+summary(aov.ccn)
+```
+
+### Question 7
+**Construct a mean separation procedure of your choice.**
+
+```{r}
+lsdb <- LSD.test(y = aov.ccb,
+                trt = "Trt")
+lsdn <- LSD.test(y = aov.ccn,
+                 trt = "Trt")
+lsdb
+lsdn
+
+```
+
+**Answer:** __LSD test shoes that there are treatment differences for both variables! Hooray!__
+
+### Question 8
+**Write a brief summary of the results and discuss conclusions you could draw from the data set.**
+
+**Answer:** __Results of this experiment show through statistical tests that planting early leads to a significant increase in biomass and likely significantly higher Nitrogen usage.__
+
+__Anova shows that the variance is within expected results of the model, and the LSD test tells us that treatments do result in significantly different observations.__
+
+---
+
+## Part 2: Data Ethics
+
+**Scenario:** This planting-date and cover-crop trial design is based on a real study of winter rye at three locations. Now imagine you are a graduate student running this same kind of analysis for a similar planting-date trial. While checking your ANOVA assumptions, you notice that one block at the northern location has biomass and nitrogen values far outside the range of every other block. The values are far outside of the biological range expected, your advisor tells you to drop that block from the analysis since "it's obviously a mistake." 
+
+Consider this scenario as you answer the following questions.
+
+### Question 9
+**What is the ethical tension or dilemma?; How should the results of the analysis be described?; How should your report the keeping or dropping of the data?**
+
+**Answer:** __Cherry picking data to make the model fit better raises some ethical tension. The results of the other block should be reported, even if it's a genuine mistake you can simply omit the block from analysis. It should be kept around in order to prevent future measuring errors, or could be salvaged if it's simply a units/decimal error.__
+
+### Question 10
+**Who holds power in this situation?**
+
+**Answer:** __The professor holds more hierarchical power__
+
+### Question 11
+**Whose voices are missing or marginalized?**
+
+**Answer:** __Student is being diminished by the professor saying their observations are "obviously an error"__
+
+### Question 12
+**What harm could occur — even unintentionally?**
+
+**Answer:** __The farmers who will rely on the study will be financially harmed.__
+
+---
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
